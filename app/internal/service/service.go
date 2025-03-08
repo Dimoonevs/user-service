@@ -5,6 +5,7 @@ import (
 	"github.com/Dimoonevs/user-service/app/internal/lib"
 	"github.com/Dimoonevs/user-service/app/internal/models"
 	"github.com/Dimoonevs/user-service/app/internal/repo/mysql"
+	"github.com/Dimoonevs/user-service/app/pkg/jwt"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -60,7 +61,7 @@ func LoginUser(req models.UsersReq) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to compare password")
 	}
-	token, err := generateJWT(req.Email, userData.ID)
+	token, err := jwt.GenerateJWT(req.Email, userData.ID)
 	if err != nil {
 		return "", err
 	}
