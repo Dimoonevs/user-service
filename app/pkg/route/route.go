@@ -22,13 +22,10 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 	switch {
 	case remainingPath == "/register" && ctx.IsPost():
 		handleUserRegister(ctx)
-
 	case remainingPath == "/verify" && ctx.IsGet():
 		handleUserVerify(ctx)
-
 	case remainingPath == "/login" && ctx.IsPost():
 		handleUserLogin(ctx)
-
 	default:
 		respJSON.WriteJSONError(ctx, fasthttp.StatusNotFound, nil, "Endpoint not found")
 	}

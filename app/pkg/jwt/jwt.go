@@ -3,9 +3,12 @@ package jwt
 import (
 	"errors"
 	"flag"
+	"fmt"
+	"github.com/Dimoonevs/video-service/app/pkg/respJSON"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -33,15 +36,13 @@ func JWTMiddleware(next fasthttp.RequestHandler) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
 		authHeader := string(ctx.Request.Header.Peek("Authorization"))
 		if authHeader == "" {
-			ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-			ctx.SetBody([]byte(`{"error": "missing token"}`))
+			respJSON.WriteJSONError(ctx, http.StatusUnauthorized, fmt.Errorf("Unauthorized: "), "Missing token")
 			return
 		}
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-			ctx.SetBody([]byte(`{"error": "invalid token format"}`))
+			respJSON.WriteJSONError(ctx, http.StatusUnauthorized, fmt.Errorf("Unauthorized: "), "Invalid token")
 			return
 		}
 
@@ -49,8 +50,7 @@ func JWTMiddleware(next fasthttp.RequestHandler) fasthttp.RequestHandler {
 
 		claims, err := parseJWT(tokenStr)
 		if err != nil {
-			ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-			ctx.SetBody([]byte(`{"error": "` + err.Error() + `"}`))
+			respJSON.WriteJSONError(ctx, http.StatusUnauthorized, err, "\"error\":")
 			return
 		}
 
