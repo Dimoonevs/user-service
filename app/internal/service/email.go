@@ -15,11 +15,10 @@ var (
 	SMTPPort   = flag.String("SMTPPort", "", "SMTP server port")
 )
 
-func sendVerificationEmail(toEmail, code string) error {
+func sendVerificationEmail(toEmail, code, subject, bodyMessage string) error {
 	from := *SMTPEmail
 	to := []string{toEmail}
-	subject := "Подтверждение регистрации"
-	body := fmt.Sprintf("Ваш код подтверждения: %s\n\nВведите его для завершения регистрации.", code)
+	body := fmt.Sprintf("Your code: %s\n\n%s", code, bodyMessage)
 
 	message := []byte("From: " + from + "\r\n" +
 		"To: " + strings.Join(to, ",") + "\r\n" +

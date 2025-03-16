@@ -13,3 +13,13 @@ type UserData struct {
 	Code     string `json:"code"`
 	IsVerify bool   `json:"is_verify"`
 }
+
+type UserSettings struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	UserID       int    `json:"user_id"`
+	AIToken      string `json:"ai_token"`
+	WhisperModel string `json:"whisper_model"`
+	TTSModel     string `json:"tts_model"`
+	GPTModel     string `json:"gpt_model"`
+}

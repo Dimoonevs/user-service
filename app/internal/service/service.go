@@ -24,7 +24,7 @@ func RegisterUser(req models.UsersReq) (int, error) {
 		return 0, err
 	}
 
-	if err := sendVerificationEmail(req.Email, code); err != nil {
+	if err = sendVerificationEmail(req.Email, code, "Confirmation of registration", "Enter this code to confirm your registration"); err != nil {
 		logrus.Errorf("Failed to send verification email: %v", err)
 		return 0, err
 	}
@@ -66,4 +66,62 @@ func LoginUser(req models.UsersReq) (string, error) {
 		return "", err
 	}
 	return token, nil
+}
+
+func RequestResetPassword(email string) error {
+	userData, err := mysql.GetConnection().GetUserByEmail(email)
+	if err != nil {
+		return fmt.Errorf("failed to reset password for user with email: %s", email)
+	}
+	code := lib.GenerateSecureVerificationCode()
+
+	if err = mysql.GetConnection().UpdateVerifyCode(userData.ID, code); err != nil {
+		return fmt.Errorf("failed to reset password for user with email: %s", email)
+	}
+
+	if err = sendVerificationEmail(email, code, "Confirmation of reset password", "Enter this code to confirm reset password"); err != nil {
+		logrus.Errorf("Failed to send verification email: %v", err)
+		return err
+	}
+	return nil
+}
+
+func ConfirmResetPassword(req models.UsersReq) error {
+	userData, err := mysql.GetConnection().GetUserByEmail(req.Email)
+	if err != nil {
+		return err
+	}
+	if req.Code != userData.Code {
+		return fmt.Errorf("failed to verify code for user with email: %s", req.Email)
+	}
+
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err = mysql.GetConnection().ChangeDataUser("", string(hashedPassword), userData.ID); err != nil {
+		return err
+	}
+	return nil
+}
+
+// with token
+
+func UserSettings(userID int, req models.UserSettings) error {
+	if err := mysql.GetConnection().SetUserSettings(userID, req); err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetUserSettings(userID int) (settings []*models.UserSettings, err error) {
+	settings, err = mysql.GetConnection().GetUserSettings(userID)
+	if err != nil {
+		return nil, err
+	}
+	return settings, nil
+}
+
+func UpdateUserSettings(userID int, settings models.UserSettings) error {
+	if err := mysql.GetConnection().UpdateUserSettings(userID, settings); err != nil {
+		return err
+	}
+	return nil
 }
