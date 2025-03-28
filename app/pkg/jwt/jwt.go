@@ -70,7 +70,7 @@ func parseJWT(tokenStr string) (jwt.MapClaims, error) {
 	})
 
 	if err != nil || !token.Valid {
-		return nil, errors.New("invalid token")
+		return nil, errors.New(fmt.Sprintf("%s is valid:%t.", err, token.Valid))
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
