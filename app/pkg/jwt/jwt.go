@@ -50,7 +50,7 @@ func JWTMiddleware(next fasthttp.RequestHandler) fasthttp.RequestHandler {
 
 		claims, err := parseJWT(tokenStr)
 		if err != nil {
-			respJSON.WriteJSONError(ctx, http.StatusUnauthorized, err, "\"error\":")
+			respJSON.WriteJSONError(ctx, http.StatusUnauthorized, err, "error")
 			return
 		}
 
@@ -70,7 +70,7 @@ func parseJWT(tokenStr string) (jwt.MapClaims, error) {
 	})
 
 	if err != nil || !token.Valid {
-		return nil, errors.New(fmt.Sprintf("%s is valid:%t.", err, token.Valid))
+		return nil, errors.New(fmt.Sprintf("%s; is valid:%t.", err, token.Valid))
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
