@@ -3,6 +3,7 @@ package route
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Dimoonevs/go-prometheus-metrics/metrics"
 	"github.com/Dimoonevs/user-service/app/internal/models"
 	"github.com/Dimoonevs/user-service/app/internal/service"
 	"github.com/Dimoonevs/user-service/app/pkg/jwt"
@@ -77,6 +78,7 @@ func handleUserRegister(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	metrics.UserRegistered.Inc()
 	respJSON.WriteJSONResponse(ctx, fasthttp.StatusCreated, "Created user and send code to email", userID)
 }
 
@@ -97,6 +99,8 @@ func handleUserVerify(ctx *fasthttp.RequestCtx) {
 		respJSON.WriteJSONError(ctx, fasthttp.StatusBadRequest, err, "Failed to verify code")
 		return
 	}
+
+	metrics.UserVerified.Inc()
 	respJSON.WriteJSONResponse(ctx, fasthttp.StatusOK, "Verify user successful", req.Email)
 }
 

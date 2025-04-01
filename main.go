@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/Dimoonevs/go-prometheus-metrics/metrics"
 	"github.com/Dimoonevs/user-service/app/pkg/route"
 	"github.com/valyala/fasthttp"
 	"github.com/vharitonsky/iniflags"
@@ -14,6 +15,7 @@ var (
 
 func main() {
 	iniflags.Parse()
+	metrics.InitAndStartMetricsServer()
 
 	server := &fasthttp.Server{
 		Handler:            route.RequestHandler,
