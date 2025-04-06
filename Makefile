@@ -1,4 +1,4 @@
-HOST=51.21.131.121
+HOST=56.228.19.85
 HOMEDIR=/var/www/user-service/
 USER=dima
 
