@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Dimoonevs/user-service/app/internal/models"
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
 	"log"
@@ -44,18 +45,38 @@ func GetConnection() *Storage {
 
 func (s *Storage) SaveUserData(userData models.UserData) (int, error) {
 	query := `INSERT INTO users (email, password_hash, verification_token, is_verified) VALUES (?, ?, ?, 0)`
-
 	result, err := s.db.Exec(query, userData.Email, userData.Password, userData.Code)
-	if err != nil {
-		return 0, err
+	if err == nil {
+		id, err := result.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+		return int(id), nil
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return 0, err
+	if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
+		var id int
+		var isVerified bool
+
+		checkQuery := `SELECT id, is_verified FROM users WHERE email = ?`
+		err = s.db.QueryRow(checkQuery, userData.Email).Scan(&id, &isVerified)
+		if err != nil {
+			return 0, err
+		}
+
+		if !isVerified {
+			updateQuery := `UPDATE users SET password_hash = ?, verification_token = ? WHERE id = ?`
+			_, err := s.db.Exec(updateQuery, userData.Password, userData.Code, id)
+			if err != nil {
+				return 0, err
+			}
+			return id, nil
+		}
+
+		return 0, fmt.Errorf("user already exist")
 	}
 
-	return int(id), nil
+	return 0, err
 }
 
 func (s *Storage) GetUserByEmail(email string) (*models.UserData, error) {
@@ -203,5 +224,11 @@ func (s *Storage) UpdateUserSettings(userID int, settings models.UserSettings) e
 	args = append(args, userID, settings.ID)
 
 	_, err := s.db.Exec(query, args...)
+	return err
+}
+
+func (s *Storage) SetCodeByEmail(email, code string) error {
+	query := `UPDATE users SET verification_token = ? WHERE email = ?`
+	_, err := s.db.Exec(query, code, email)
 	return err
 }

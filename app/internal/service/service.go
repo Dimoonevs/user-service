@@ -32,6 +32,21 @@ func RegisterUser(req models.UsersReq) (int, error) {
 	return userID, nil
 }
 
+func SendVerificationEmailAgain(email string) error {
+	code := lib.GenerateSecureVerificationCode()
+
+	err := mysql.GetConnection().SetCodeByEmail(email, code)
+	if err != nil {
+		return err
+	}
+
+	if err := sendVerificationEmail(email, code, "Confirmation of registration", "Enter this code to confirm your registration"); err != nil {
+		logrus.Errorf("Failed to send verification email: %v", err)
+		return err
+	}
+	return nil
+}
+
 func VerifyCode(req models.UsersReq) error {
 	userData, err := mysql.GetConnection().GetUserByEmail(req.Email)
 	if err != nil {
